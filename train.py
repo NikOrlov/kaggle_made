@@ -49,13 +49,9 @@ def train_one_epoch(loader, model, loss_fn, optimizer, scaler):
 
 
 def main():
-    # model = EfficientNet.from_pretrained("efficientnet-b7", weights_path='efficientnet-b7-dcc49843.pth')
-    # model = EfficientNet.from_pretrained("efficientnet-b0")
-    model = EfficientNet.from_pretrained("efficientnet-b0", weights_path='pretrained/efficientnet-b0-355c32eb.pth')
-    # emb_size = 2560
-    emb_size = 1280
-
-    model_type = 'b0'
+    model = EfficientNet.from_pretrained("efficientnet-b7")
+    emb_size = 2560
+    model_type = 'b7'
     model._fc = nn.Linear(emb_size, config.NUM_CLASSES)
 
     train_dataset = SportDataset(root=config.ROOT, stage='train', transform=config.basic_transform)
@@ -82,18 +78,14 @@ def main():
         model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
     )
 
-    # if config.LOAD_MODEL and config.CHECKPOINT_FILE in os.listdir():
-    load_checkpoint(torch.load(config.CHECKPOINT_FILE), model)
-    f1_score = compute_f1(model, train_loader)
-    print(f1_score.compute())
-    # for epoch in range(config.NUM_EPOCHS):
-    #     train_one_epoch(train_loader, model, loss_fn, optimizer, scaler)
-    #     f1_score = compute_f1(model, train_loader)
-    #     print(f1_score.compute())
-    #
-    # if config.SAVE_MODEL:
-    #     checkpoint = {"state_dict": model.state_dict(), "optimizer": optimizer.state_dict()}
-    #     save_checkpoint(checkpoint, filename=config.CHECKPOINT_FILE)
+    for epoch in range(config.NUM_EPOCHS):
+        train_one_epoch(train_loader, model, loss_fn, optimizer, scaler)
+        f1_score = compute_f1(model, train_loader)
+        print(f1_score.compute())
+        
+    if config.SAVE_MODEL:
+        checkpoint = {"state_dict": model.state_dict(), "optimizer": optimizer.state_dict()}
+        save_checkpoint(checkpoint, filename=config.CHECKPOINT_FILE)
 
     save_feature_vectors(model,
                          train_loader,
